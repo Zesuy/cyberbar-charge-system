@@ -113,8 +113,13 @@ def logout():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
+    if 'logged_in' in session and session['logged_in']:
+        if session['is_admin']:
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return redirect(url_for('dashboard'))
+    else:
+        return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -160,7 +165,7 @@ def dashboard():
 
     # 检查 last_login 是否为 None
     if user.last_login is None:
-        last_login_str = "从未登录"
+        last_login_str = "未上机"
     else:
         last_login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -173,7 +178,7 @@ def dashboard():
     }
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html', user_data=user_data)
+    return render_template('dashboard.html', user_data=user_data,on_log=user.last_login)
 
 
 @app.route('/billing_history')

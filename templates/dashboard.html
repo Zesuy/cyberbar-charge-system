@@ -14,9 +14,14 @@
 
                 <div id="user-data">
                     <p>当前时间：{{ user_data.time }}</p>
-                    <p>上机时间：{{ user_data.last_login }}</p>
-                    <p>费用：{{ user_data.fee }}元</p>
-                    <p>每分钟价格：{{user_data.fee_per_minute}}元</p>
+                {% if on_log %}
+                    <p>上机时间：{{ user_data.last_login}}</p>
+                    <p>本次费用：{{ user_data.fee }}元</p>
+                {% else %}
+                    <p>当前状态：未上机</p>
+                {% endif %}
+                    <p>当前计费组：</p>
+                    <p>当前计费组价格：{{user_data.fee_per_minute}}元/分</p>
                 </div>
 
 
