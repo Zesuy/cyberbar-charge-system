@@ -227,8 +227,31 @@ def admin_dashboard():
     if not session.get('logged_in') or not session.get('is_admin'):
         return redirect(url_for('index'))
     users = User.query.all()  # 获取所有用户
-    return render_template('admin_dashboard.html', users=users)
+    billing_groups = BillingGroup.query.all()  # 获取所有计费组
+    billing_records = BillingRecord.query.all()  # 获取所有计费记录
+    return render_template('admin_dashboard.html', users=users, billing_groups=billing_groups, billing_records=billing_records)
 
+@app.route('/edit_billing_record/<int:record_id>', methods=['GET', 'POST'])
+def edit_billing_record(record_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    record = BillingRecord.query.get_or_404(record_id)
+    if request.method == 'POST':
+        record.last_login = datetime.strptime(request.form['last_login'], '%Y-%m-%d %H:%M:%S')
+        record.logout_time = datetime.strptime(request.form['logout_time'], '%Y-%m-%d %H:%M:%S') if request.form['logout_time'] else None
+        record.fee = float(request.form['fee'])
+        db.session.commit()
+        return redirect(url_for('admin_dashboard'))
+    return render_template('edit_billing_record.html', record=record)
+
+@app.route('/delete_billing_record/<int:record_id>')
+def delete_billing_record(record_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    record = BillingRecord.query.get_or_404(record_id)
+    db.session.delete(record)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 # 管理员修改密码
 @app.route('/admin_change_password', methods=['GET', 'POST'])
@@ -254,13 +277,15 @@ def edit_user(user_id):
     if not session.get('logged_in') or not session.get('is_admin'):
         return redirect(url_for('index'))
     user = User.query.get_or_404(user_id)
+    billing_groups = BillingGroup.query.all()  # 获取所有计费组
     if request.method == 'POST':
         user.username = request.form['username']
+        user.billing_group_id = int(request.form['billing_group_id'])  # 更新计费组
         if request.form['password']:
             user.password = generate_password_hash(request.form['password'])
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
-    return render_template('edit_user.html', user=user)
+    return render_template('edit_user.html', user=user, billing_groups=billing_groups)
 
 
 @app.route('/add_user')
@@ -268,23 +293,79 @@ def add_user_form():
     return render_template('add_user.html')
 
 
-@app.route('/add_user', methods=['POST'])
+@app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    billing_groups = BillingGroup.query.all()  # 获取所有计费组
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        billing_group_id = int(request.form['billing_group_id'])  # 获取计费组 ID
 
         # 验证用户名和密码
         # ...
 
         # 创建新用户
-        new_user = User(username=username, password=generate_password_hash(password))
+        new_user = User(username=username, password=generate_password_hash(password), billing_group_id=billing_group_id)
         db.session.add(new_user)
         db.session.commit()
 
         # 重定向到管理员控制面板
         return redirect(url_for('admin_dashboard'))
+    return render_template('add_user.html', billing_groups=billing_groups)
 
+@app.route('/add_billing_group', methods=['GET', 'POST'])
+def add_billing_group():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        name = request.form['name']
+        price = float(request.form['price'])
+
+        # 验证计费组名称和价格
+        # ...
+
+        # 创建新的计费组
+        new_billing_group = BillingGroup(name=name, price=price)
+        db.session.add(new_billing_group)
+        db.session.commit()
+
+        # 重定向到管理员控制面板
+        return redirect(url_for('admin_dashboard'))
+    return render_template('add_billing_group.html')
+
+# 编辑计费组
+@app.route('/edit_billing_group/<int:billing_group_id>', methods=['GET', 'POST'])
+def edit_billing_group(billing_group_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    billing_group = BillingGroup.query.get_or_404(billing_group_id)
+    if request.method == 'POST':
+        billing_group.name = request.form['name']
+        billing_group.price = float(request.form['price'])
+        db.session.commit()
+        return redirect(url_for('admin_dashboard'))
+    return render_template('edit_billing_group.html', billing_group=billing_group)
+
+# 删除计费组
+@app.route('/delete_billing_group/<int:billing_group_id>')
+def delete_billing_group(billing_group_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    billing_group = BillingGroup.query.get_or_404(billing_group_id)
+    db.session.delete(billing_group)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)

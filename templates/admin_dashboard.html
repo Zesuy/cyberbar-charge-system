@@ -30,7 +30,7 @@
                             <td>{{ user.username }}</td>
                             <td>
                                 <a href="/edit_user/{{ user.id }}" class="btn btn-sm btn-primary">编辑</a>
-                                <!--  可以添加删除功能 -->
+                                <a href="/delete_user/{{ user.id }}" class="btn btn-sm btn-danger">删除</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -38,6 +38,62 @@
                 </table>
 
                 <a href="/add_user" class="btn btn-success mt-3">添加用户</a>
+
+                <h3 class="mt-5">计费组列表</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>价格</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for billing_group in billing_groups %}
+                        <tr>
+                            <td>{{ billing_group.id }}</td>
+                            <td>{{ billing_group.name }}</td>
+                            <td>{{ billing_group.price }}</td>
+                            <td>
+                                <a href="/edit_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-primary">编辑</a>
+                                <a href="/delete_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-danger">删除</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <a href="/add_billing_group" class="btn btn-success mt-3">添加计费组</a>
+
+                <h3 class="mt-5">计费记录列表</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户</th>
+                            <th>最后登录时间</th>
+                            <th>退出时间</th>
+                            <th>费用</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for billing_record in billing_records %}
+                        <tr>
+                            <td>{{ billing_record.id }}</td>
+                            <td>{{ billing_record.user.username }}</td>
+                            <td>{{ billing_record.last_login.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{% if billing_record.logout_time %}{{ billing_record.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}</td>
+                            <td>{{ billing_record.fee }}</td>
+                            <td>
+                                <a href="/edit_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-primary">编辑</a>
+                                <a href="/delete_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-danger">删除</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
