@@ -20,6 +20,7 @@ class User(db.Model):
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
     balance = db.Column(db.Float, nullable=False, default=0)
     balance_left = db.Column(db.Float, nullable=False, default=0)
+    on_call=db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -172,17 +173,19 @@ def logout():
 
 @app.route('/', endpoint='index')
 def index():
+    user_ip = request.remote_addr
     if 'logged_in' in session and session['logged_in']:
         if session['is_admin']:
             return redirect(url_for('admin_dashboard'))
         else:
             return redirect(url_for('dashboard'))
     else:
-        return render_template('index.html')
+        return render_template('index.html', user_ip=user_ip)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    user_ip = request.remote_addr  # 获取访问者的 IP 地址
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -199,7 +202,7 @@ def login():
             # 使用更具体的错误提示信息
             error_message = "用户名或密码错误。"
             return render_template('index.html', error=error_message)
-    return render_template('index.html')
+    return render_template('index.html', user_ip=user_ip)  # 将 user_ip 传递给模板
 
 
 @app.route('/logout')

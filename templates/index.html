@@ -3,6 +3,36 @@
 <head>
     <title>网吧计费系统</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -21,7 +51,7 @@
 
                     <div class="form-group">
                         <label for="username" id="username">机器编号:</label>
-                        <input type="text" class="form-control" name="username" required>
+                        <input type="text" class="form-control" name="username" value="{{ user_ip }}" required>
                     </div>
 
                     <div class="form-group">
@@ -29,10 +59,14 @@
                         <input type="password" class="form-control" name="password" required>
                     </div>
 
+                    <div class="form-group">
+                        <p id="user_ip" class="text-muted">你当前的 IP 是: {{ user_ip }}</p>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-block">登录</button>
                 </form>
                 <br>
-                <p class="text-center"><a href="#">管理员登录</a></p>
+                <p class="text-center">管理员请直接登录</a></p>
                 {% else %}
                 <p class="text-center">您已登录。 <a href="/logout">退出</a></p>
                 {% endif %}

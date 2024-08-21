@@ -103,8 +103,20 @@
                 <button id="logout-button" >
                     <i class="fas fa-sign-out-alt"></i> 下机
                 </button>
-
+                <button id="balance" onclick="showAdminMessage()">
+                    <i class="fas fa-money-bill-wave"></i> 充值
+                </button>
+                <button id="call" onclick="call_admin()">
+                    <i class="fas fa-phone"></i> 呼叫
+                </button>
                 <script>
+                    function call_admin(){
+
+                    }
+
+                    function showAdminMessage() {
+                      alert("请联系管理员");
+                    }
                     const loginButton = document.getElementById('login-button');
                     loginButton.addEventListener('click', () => {
                         fetch('/api/login', {
