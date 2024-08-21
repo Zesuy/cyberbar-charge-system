@@ -23,6 +23,10 @@
                         <label for="fee">费用:</label>
                         <input type="number" class="form-control" id="fee" name="fee" value="{{ record.fee }}">
                     </div>
+                    <div class="form-group">
+                        <label for="description">描述:</label>
+                        <textarea class="form-control" id="description" name="description">{{ record.description }}</textarea>
+                    </div>
                     <button type="submit" class="btn btn-primary">保存</button>
                 </form>
             </div>

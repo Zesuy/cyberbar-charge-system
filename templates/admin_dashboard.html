@@ -75,6 +75,7 @@
                             <th>最后登录时间</th>
                             <th>退出时间</th>
                             <th>费用</th>
+                            <th>描述</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -86,6 +87,7 @@
                             <td>{{ billing_record.last_login.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>{% if billing_record.logout_time %}{{ billing_record.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}</td>
                             <td>{{ billing_record.fee }}</td>
+                            <td>{{ billing_record.description }}</td>
                             <td>
                                 <a href="/edit_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-primary">编辑</a>
                                 <a href="/delete_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-danger">删除</a>

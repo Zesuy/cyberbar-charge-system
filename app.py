@@ -16,7 +16,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_logged = db.Column(db.Boolean, default=False)
-    last_login = db.Column(db.DateTime, default=datetime.now().date())
+    last_login = db.Column(db.String(80), default=False)
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
     balance = db.Column(db.Float, nullable=False, default=0)
 
@@ -27,8 +27,8 @@ class User(db.Model):
         """计算费用"""
         if self.last_login:
             time_diff = datetime.now() - self.last_login
-            minutes = time_diff.total_seconds() / 60
-            return round(minutes * self.billing_group.price, 2)  # 修改为 self.billing_group.price
+            hours = time_diff.total_seconds() / 3600  # 计算小时数
+            return round(hours * self.billing_group.price, 2)  # 修改为每小时计费
         else:
             return 0.00
 
@@ -47,7 +47,7 @@ class BillingRecord(db.Model):
     last_login = db.Column(db.DateTime, nullable=False)
     logout_time = db.Column(db.DateTime)  # 下机时间
     fee = db.Column(db.Float, nullable=False)
-    description=db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=False)
     user = db.relationship('User', backref=db.backref('billing_records', lazy=True))
 
     def __repr__(self):
@@ -91,7 +91,7 @@ with app.app_context():
     default_billing_group = BillingGroup.query.filter_by(name='默认').first()
     if not default_billing_group:
         # 创建默认计费组
-        default_billing_group = BillingGroup(name='默认', price=0.1)
+        default_billing_group = BillingGroup(name='默认', price=5)
         db.session.add(default_billing_group)
         db.session.commit()
 
@@ -116,7 +116,7 @@ def login():
     if user_id:
         user = User.query.get(user_id)  # 使用用户 ID 查询用户
         if user:
-            if get_balance_left(user_id)>0:
+            if get_balance_left(user_id) > 0:
                 # 记录上机时间
                 user.last_login = datetime.now()
                 user.is_logged = True
@@ -156,7 +156,7 @@ def logout():
         return '请先登录'
 
 
-@app.route('/')
+@app.route('/',endpoint='index')
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['is_admin']:
@@ -200,6 +200,9 @@ def logout():
 def dashboard():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
+    # 检查 user_id 是否为空
+    if user is None:
+        return redirect(url_for('logout'))  # 返回错误页面
 
     # 检查 last_login 是否为 None
     if user.last_login is None:
