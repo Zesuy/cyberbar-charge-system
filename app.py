@@ -185,14 +185,6 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/admin_dashboard')
-def admin_dashboard():
-    if not session.get('logged_in') or not session.get('is_admin'):
-        return redirect(url_for('index'))
-    users = User.query.all()  # 获取所有用户
-    return render_template('admin_dashboard.html', users=users)
-
-
 @app.route('/dashboard')
 def dashboard():
     user_id = session.get('user_id')
@@ -228,6 +220,14 @@ def billing_history():
             return '用户不存在'
     else:
         return '请先登录'
+
+
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+    users = User.query.all()  # 获取所有用户
+    return render_template('admin_dashboard.html', users=users)
 
 
 # 管理员修改密码
