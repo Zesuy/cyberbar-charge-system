@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'  # 请替换成更安全的密钥
+app.config['SECRET_KEY'] = 'cjMn873LamMR5kta4'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cybercafe.db'
 db = SQLAlchemy(app)
 
@@ -20,7 +20,7 @@ class User(db.Model):
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
     balance = db.Column(db.Float, nullable=False, default=0)
     balance_left = db.Column(db.Float, nullable=False, default=0)
-    on_call=db.Column(db.Boolean, default=False)
+    on_call = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -126,6 +126,47 @@ with app.app_context():
         db.session.commit()
 
 
+@app.route('/api/cancel_call', methods=['POST'])
+def cancel_call():
+    if not session.get('logged_in'):
+        return jsonify({'error': '未登录'}), 403
+
+    user = User.query.filter_by(username=session.get('username')).first()
+    if user:
+        user.on_call = False  # 取消用户的呼叫状态
+        db.session.commit()
+        return jsonify({'success': '取消呼叫成功'})
+    return jsonify({'error': '用户不存在'}), 404
+
+
+@app.route('/admin/cancel_call/<int:user_id>', methods=['POST'], endpoint='admin_cancel_call')
+def admin_cancel_call(user_id):
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('index'))
+
+    # 获取对应用户并设置 on_call 为 False
+    user = User.query.get(user_id)
+    if user:
+        user.on_call = False
+        db.session.commit()
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/api/call_admin', methods=['POST'])
+def call_admin():
+    if not session.get('logged_in'):
+        return jsonify({'error': '未登录'}), 403
+
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    if user:
+        user.on_call = True
+        db.session.commit()
+        return jsonify({'success': '呼叫管理员成功'})
+    return jsonify({'error': '用户不存在'}), 404
+
+
 @app.route('/api/login', methods=['POST'], endpoint='api_login')
 def login():
     user_id = session.get('user_id')  # 获取用户 ID
@@ -210,7 +251,7 @@ def logout():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     if user.is_logged:
-        return redirect(url_for('dashboard', logout_message='请先下机'))
+        return redirect(url_for('dashboard'))
     session.pop('logged_in', None)
     session.pop('user_id', None)
     session.pop('is_admin', None)
@@ -235,7 +276,8 @@ def dashboard():
         'last_login': last_login_str,
         "fee_per_minute": user.billing_group.price,  # 使用 user.billing_group.price 获取价格
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'fee': user.calculate_fee()  # 使用 user.calculate_fee() 获取费用
+        'fee': user.calculate_fee(),  # 使用 user.calculate_fee() 获取费用
+        'oncall': user.on_call
     }
     balance_left = round(get_balance_left(user_id) - user.calculate_fee(), 2)
     if not session.get('logged_in'):
@@ -268,8 +310,10 @@ def admin_dashboard():
     users = User.query.all()  # 获取所有用户
     billing_groups = BillingGroup.query.all()  # 获取所有计费组
     billing_records = BillingRecord.query.all()  # 获取所有计费记录
+    # 查找正在呼叫的用户（假设 on_call 字段为布尔值，表示用户是否正在呼叫）
+    calling_users = [user for user in users if user.on_call]
     return render_template('admin_dashboard.html', users=users, billing_groups=billing_groups,
-                           billing_records=billing_records)
+                           billing_records=billing_records, calling_users=calling_users)
 
 
 @app.route('/edit_billing_record/<int:record_id>', methods=['GET', 'POST'])
