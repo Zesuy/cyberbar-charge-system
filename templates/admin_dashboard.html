@@ -3,7 +3,6 @@
 <head>
     <title>管理员控制面板</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-</head>
     <style>
         .alert-custom {
             position: relative;
@@ -18,125 +17,134 @@
             position: relative;
             z-index: 1; /* Ensures tables stay under the alert */
         }
+        .admin-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Add shadow */
+            margin: 20px auto; /* Center the panel */
+            max-width: 900px; /* Limit the width of the panel */
+        }
     </style>
+</head>
 <body>
     <div class="container mt-5">
+        <div class="admin-panel">
 
-        <!-- Call Alert Section -->
-        {% if calling_users|length > 0 %}
-        <div class="alert alert-danger alert-custom" role="alert">
-            正在呼叫的用户：
-            <ul class="list-group">
-                {% for caller in calling_users %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <strong>{{ caller.username }}</strong> <!-- Bold username to emphasize -->
-                    <form action="{{ url_for('admin_cancel_call', user_id=caller.id) }}" method="POST">
-                        <button type="submit" class="btn btn-sm btn-danger">取消呼叫</button>
-                    </form>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+            <!-- Call Alert Section -->
+            {% if calling_users|length > 0 %}
+            <div class="alert alert-danger alert-custom" role="alert">
+                正在呼叫的用户：
+                <ul class="list-group">
+                    {% for caller in calling_users %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>{{ caller.username }}</strong> <!-- Bold username to emphasize -->
+                        <form action="{{ url_for('admin_cancel_call', user_id=caller.id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm btn-danger">取消呼叫</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="mb-4">管理员控制面板</h2>
+                    <p>欢迎回来，管理员！</p>
 
+                    <a href="/admin_change_password" class="btn btn-secondary mr-2">修改密码</a>
+                    <a href="/logout" class="btn btn-danger">退出</a>
 
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="mb-4">管理员控制面板</h2>
-                <p>欢迎回来，管理员！</p>
+                    <h3 class="mt-5">用户列表</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>计费组</th>
+                                <th>充值金额</th>
+                                <th>余额</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.billing_group.name }}</td>
+                                <td>{{ user.balance }}</td>
+                                <td>{{ balance }}</td>
+                                <td>
+                                    <a href="/edit_user/{{ user.id }}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a href="/delete_user/{{ user.id }}" class="btn btn-sm btn-danger">删除</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
 
-                <a href="/admin_change_password" class="btn btn-secondary mr-2">修改密码</a>
-                <a href="/logout" class="btn btn-danger">退出</a>
+                    <a href="/add_user" class="btn btn-success mt-3">添加用户</a>
 
-                <h3 class="mt-5">用户列表</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>用户名</th>
-                            <th>计费组</th>
-                            <th>充值金额</th>
-                            <th>余额</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.id }}</td>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.billing_group.name }}</td>
-                            <td>{{ user.balance }}</td>
-                            <td>{{ balance }}</td>
-                            <td>
-                                <a href="/edit_user/{{ user.id }}" class="btn btn-sm btn-primary">编辑</a>
-                                <a href="/delete_user/{{ user.id }}" class="btn btn-sm btn-danger">删除</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    <h3 class="mt-5">计费组列表</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>名称</th>
+                                <th>价格</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for billing_group in billing_groups %}
+                            <tr>
+                                <td>{{ billing_group.id }}</td>
+                                <td>{{ billing_group.name }}</td>
+                                <td>{{ billing_group.price }}</td>
+                                <td>
+                                    <a href="/edit_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a href="/delete_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-danger">删除</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
 
-                <a href="/add_user" class="btn btn-success mt-3">添加用户</a>
+                    <a href="/add_billing_group" class="btn btn-success mt-3">添加计费组</a>
 
-                <h3 class="mt-5">计费组列表</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>名称</th>
-                            <th>价格</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for billing_group in billing_groups %}
-                        <tr>
-                            <td>{{ billing_group.id }}</td>
-                            <td>{{ billing_group.name }}</td>
-                            <td>{{ billing_group.price }}</td>
-                            <td>
-                                <a href="/edit_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-primary">编辑</a>
-                                <a href="/delete_billing_group/{{ billing_group.id }}" class="btn btn-sm btn-danger">删除</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <a href="/add_billing_group" class="btn btn-success mt-3">添加计费组</a>
-
-                <h3 class="mt-5">计费记录列表</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>用户</th>
-                            <th>最后登录时间</th>
-                            <th>退出时间</th>
-                            <th>费用</th>
-                            <th>描述</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for billing_record in billing_records %}
-                        <tr>
-                            <td>{{ billing_record.id }}</td>
-                            <td>{{ billing_record.user.username }}</td>
-                            <td>{{ billing_record.last_login.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                            <td>{% if billing_record.logout_time %}{{ billing_record.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}</td>
-                            <td>{{ billing_record.fee }}</td>
-                            <td>{{ billing_record.description }}</td>
-                            <td>
-                                <a href="/edit_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-primary">编辑</a>
-                                <a href="/delete_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-danger">删除</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    <h3 class="mt-5">计费记录列表</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户</th>
+                                <th>最后登录时间</th>
+                                <th>退出时间</th>
+                                <th>费用</th>
+                                <th>描述</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for billing_record in billing_records %}
+                            <tr>
+                                <td>{{ billing_record.id }}</td>
+                                <td>{{ billing_record.user.username }}</td>
+                                <td>{{ billing_record.last_login.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{% if billing_record.logout_time %}{{ billing_record.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}</td>
+                                <td>{{ billing_record.fee }}</td>
+                                <td>{{ billing_record.description }}</td>
+                                <td>
+                                    <a href="/edit_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-primary">编辑</a>
+                                    <a href="/delete_billing_record/{{ billing_record.id }}" class="btn btn-sm btn-danger">删除</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

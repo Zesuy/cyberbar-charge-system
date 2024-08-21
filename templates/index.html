@@ -11,13 +11,21 @@
         .container {
             background-color: #fff;
             padding: 30px;
-            border-radius: 5px;
+            border-radius: 20px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 500px; /* Adjust as needed */
+            margin: 50px auto; /* Center the container */
         }
 
         h2 {
-            color: #333;
+          color: #333;
+          text-align: center;
+          font-family: 'Roboto', sans-serif; /* 使用 Roboto 字体 */
+          font-size: 2em; /* 调整字号 */
+          letter-spacing: 2px; /* 调整字间距 */
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加阴影 */
         }
+
 
         .form-group label {
             font-weight: bold;
@@ -32,16 +40,17 @@
             background-color: #6c757d;
             border: none;
         }
+
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <h2 class="text-center mb-4">欢迎使用网吧计费系统</h2>
 
                 {% if not session.get('logged_in') %}
-                <h3 class="text-center mb-3">用户登录</h3>
+                <h3 class="text-center mb-3">登录</h3>
                 <form method="POST" action="/login">
                     {% if error %}
                         <div class="alert alert-danger" role="alert">
