@@ -3,7 +3,53 @@
 <head>
     <title>用户控制面板</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqk1w2/knoG80kI45tRx65uCnL7O.b5ymxI/N+VYs2IO46YqQ/dVtVibLgYjti+rjw/a+UGxKuYc" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #343a40;
+        }
+
+        #user-data p {
+            margin-bottom: 10px;
+        }
+
+        #user-data p:last-child {
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin-right: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: default;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -11,55 +57,94 @@
             <div class="col-md-12">
                 <h2 class="mb-4">用户控制面板</h2>
                 <p>欢迎，{{ user_data.username }}！</p>
-
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
+                <div id="notice" class="alert alert-info" role="alert" style="display:none;">
+                    </div>
                 <div id="user-data">
                     <p>当前时间：{{ user_data.time }}</p>
-                {% if on_log %}
-                    <p>上机时间：{{ user_data.last_login}}</p>
-                    <p>本次费用：{{ user_data.fee }}元</p>
-                {% else %}
-                    <p>当前状态：未上机</p>
-                {% endif %}
-                    <p>当前计费组：{{group}}</p>
-                    <p>当前计费组价格：{{user_data.fee_per_minute}}元/分</p>
+                    {% if user_data.last_login != "未上机" %}
+                        <p>上机时间：{{ user_data.last_login }}</p>
+                        <p>本次费用：{{ user_data.fee }}元</p>
+                    {% else %}
+                        <p>当前状态：未上机</p>
+                    {% endif %}
+                    <p>当前计费组：{{ group }}</p>
+                    <p>当前计费组价格：{{ user_data.fee_per_minute }}元/分</p>
+                    <p>当前余额：{{ balance_left }}元</p>
                 </div>
 
+                <button id="login-button" >
+                    <i class="fas fa-sign-in-alt"></i> 上机
+                </button>
+                <button id="logout-button" >
+                    <i class="fas fa-sign-out-alt"></i> 下机
+                </button>
 
-            <button id="login-button">上机</button>
-            <button id="logout-button">下机</button>
-
-            <script>
-                const loginButton = document.getElementById('login-button');
-                loginButton.addEventListener('click', () => {
-                    fetch('/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `username=your_username`, // 替换成实际用户名
-                    })
-                    .then(response => response.text())
-                    .then(data => {
-                        alert(data); // 显示上机结果
+                <script>
+                    const loginButton = document.getElementById('login-button');
+                    loginButton.addEventListener('click', () => {
+                        fetch('/api/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `username={{ user_data.username }}`,
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            alert(data); // 显示上机结果
+                            location.reload(); // 刷新页面
+                        });
                     });
-                });
 
-                const logoutButton = document.getElementById('logout-button');
-                logoutButton.addEventListener('click', () => {
-                    fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `username=your_username`, // 替换成实际用户 ID
-                    })
-                    .then(response => response.text())
-                    .then(data => {
-                        alert(data); // 显示下机结果
+                    const logoutButton = document.getElementById('logout-button');
+                    logoutButton.addEventListener('click', () => {
+                        fetch('/api/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `username={{ user_data.username }}`,
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            alert(data); // 显示下机结果
+                            location.reload(); // 刷新页面
+                        });
                     });
-                });
-            </script>
-                <a href="/billing_history">查看消费记录</a>
+                </script>
+
+                <div>
+                    <h3>消费记录</h3>
+                    {% if billing_records %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>费用</th>
+                                    <th>描述</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in billing_records %}
+                                    <tr>
+                                        <td>{{ record.last_login }}</td>
+                                        <td>{{ record.logout_time }}</td>
+                                        <td>{{ record.fee }}元</td>
+                                        <td>{{ record.description }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>暂无消费记录</p>
+                    {% endif %}
+                </div>
+
                 <a href="/logout" class="btn btn-danger">退出登录</a>
             </div>
         </div>

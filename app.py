@@ -18,6 +18,7 @@ class User(db.Model):
     is_logged = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime, default=datetime.now().date())
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
+    balance = db.Column(db.Float, nullable=False, default=0)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -32,6 +33,12 @@ class User(db.Model):
             return 0.00
 
 
+def get_balance_left(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    balance_left = user.balance - sum(record.fee for record in user.billing_records)
+    return balance_left
+
+
 class BillingRecord(db.Model):
     __tablename__ = 'billing_record'
     id = db.Column(db.Integer, primary_key=True)
@@ -40,7 +47,7 @@ class BillingRecord(db.Model):
     last_login = db.Column(db.DateTime, nullable=False)
     logout_time = db.Column(db.DateTime)  # 下机时间
     fee = db.Column(db.Float, nullable=False)
-
+    description=db.Column(db.String, nullable=False)
     user = db.relationship('User', backref=db.backref('billing_records', lazy=True))
 
     def __repr__(self):
@@ -109,10 +116,13 @@ def login():
     if user_id:
         user = User.query.get(user_id)  # 使用用户 ID 查询用户
         if user:
-            # 记录上机时间
-            user.last_login = datetime.now()
-            user.is_logged = True
-            db.session.commit()
+            if get_balance_left(user_id)>0:
+                # 记录上机时间
+                user.last_login = datetime.now()
+                user.is_logged = True
+                db.session.commit()
+            else:
+                return "余额不足"
             return '上机成功'
         else:
             return '用户不存在'
@@ -202,11 +212,14 @@ def dashboard():
         'last_login': last_login_str,
         "fee_per_minute": user.billing_group.price,  # 使用 user.billing_group.price 获取价格
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'fee': User.calculate_fee(User.query.get(user_id))
+        'fee': user.calculate_fee()  # 使用 user.calculate_fee() 获取费用
     }
+
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged,group=user.billing_group.name)
+    return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged, group=user.billing_group.name,
+                           balance=user.billing_group.price, balance_left=get_balance_left(user_id),
+                           billing_records=user.billing_records)
 
 
 @app.route('/billing_history')
@@ -218,9 +231,11 @@ def billing_history():
             billing_records = BillingRecord.query.filter_by(user_id=user_id).all()
             return render_template('billing_history.html', billing_records=billing_records)
         else:
-            return '用户不存在'
+            error = '用户不存在'
+            return render_template('billing_history.html', error=error)
     else:
-        return '请先登录'
+        error = '请先登录'
+        return render_template('billing_history.html', error=error)
 
 
 @app.route('/admin_dashboard')

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>编辑计费记录</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="mb-4">编辑计费记录</h2>
+
+                <form method="POST" action="{{ url_for('edit_billing_record', record_id=record.id) }}">
+                    <div class="form-group">
+                        <label for="last_login">最后登录时间:</label>
+                        <input type="datetime-local" class="form-control" id="last_login" name="last_login" value="{{ record.last_login.strftime('%Y-%m-%dT%H:%M:%S') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="logout_time">退出时间:</label>
+                        <input type="datetime-local" class="form-control" id="logout_time" name="logout_time" value="{{ record.logout_time.strftime('%Y-%m-%dT%H:%M:%S') if record.logout_time else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="fee">费用:</label>
+                        <input type="number" class="form-control" id="fee" name="fee" value="{{ record.fee }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
