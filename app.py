@@ -27,7 +27,7 @@ class User(db.Model):
         if self.last_login:
             time_diff = datetime.now() - self.last_login
             minutes = time_diff.total_seconds() / 60
-            return round(minutes * self.billing_group_price, 2)
+            return round(minutes * self.billing_group.price, 2)  # 修改为 self.billing_group.price
         else:
             return 0.00
 
@@ -111,6 +111,7 @@ def login():
         if user:
             # 记录上机时间
             user.last_login = datetime.now()
+            user.is_logged = True
             db.session.commit()
             return '上机成功'
         else:
@@ -191,7 +192,7 @@ def dashboard():
     user = User.query.get(user_id)
 
     # 检查 last_login 是否为 None
-    if user.is_logged:
+    if user.last_login is None:
         last_login_str = "未上机"
     else:
         last_login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S')
@@ -199,13 +200,13 @@ def dashboard():
     user_data = {
         'username': user.username,
         'last_login': last_login_str,
-        "fee_per_minute": user.billing_group_price,
+        "fee_per_minute": user.billing_group.price,  # 使用 user.billing_group.price 获取价格
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'fee': User.calculate_fee(User.query.get(user_id))
     }
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged)
+    return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged,group=user.billing_group.name)
 
 
 @app.route('/billing_history')
@@ -229,7 +230,9 @@ def admin_dashboard():
     users = User.query.all()  # 获取所有用户
     billing_groups = BillingGroup.query.all()  # 获取所有计费组
     billing_records = BillingRecord.query.all()  # 获取所有计费记录
-    return render_template('admin_dashboard.html', users=users, billing_groups=billing_groups, billing_records=billing_records)
+    return render_template('admin_dashboard.html', users=users, billing_groups=billing_groups,
+                           billing_records=billing_records)
+
 
 @app.route('/edit_billing_record/<int:record_id>', methods=['GET', 'POST'])
 def edit_billing_record(record_id):
@@ -238,11 +241,13 @@ def edit_billing_record(record_id):
     record = BillingRecord.query.get_or_404(record_id)
     if request.method == 'POST':
         record.last_login = datetime.strptime(request.form['last_login'], '%Y-%m-%d %H:%M:%S')
-        record.logout_time = datetime.strptime(request.form['logout_time'], '%Y-%m-%d %H:%M:%S') if request.form['logout_time'] else None
+        record.logout_time = datetime.strptime(request.form['logout_time'], '%Y-%m-%d %H:%M:%S') if request.form[
+            'logout_time'] else None
         record.fee = float(request.form['fee'])
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
     return render_template('edit_billing_record.html', record=record)
+
 
 @app.route('/delete_billing_record/<int:record_id>')
 def delete_billing_record(record_id):
@@ -252,6 +257,7 @@ def delete_billing_record(record_id):
     db.session.delete(record)
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
 
 # 管理员修改密码
 @app.route('/admin_change_password', methods=['GET', 'POST'])
@@ -310,6 +316,7 @@ def add_user():
         return redirect(url_for('admin_dashboard'))
     return render_template('add_user.html', billing_groups=billing_groups)
 
+
 @app.route('/add_billing_group', methods=['GET', 'POST'])
 def add_billing_group():
     if not session.get('logged_in') or not session.get('is_admin'):
@@ -330,6 +337,7 @@ def add_billing_group():
         return redirect(url_for('admin_dashboard'))
     return render_template('add_billing_group.html')
 
+
 # 编辑计费组
 @app.route('/edit_billing_group/<int:billing_group_id>', methods=['GET', 'POST'])
 def edit_billing_group(billing_group_id):
@@ -343,6 +351,7 @@ def edit_billing_group(billing_group_id):
         return redirect(url_for('admin_dashboard'))
     return render_template('edit_billing_group.html', billing_group=billing_group)
 
+
 # 删除计费组
 @app.route('/delete_billing_group/<int:billing_group_id>')
 def delete_billing_group(billing_group_id):
@@ -353,6 +362,7 @@ def delete_billing_group(billing_group_id):
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
+
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     if not session.get('logged_in') or not session.get('is_admin'):
@@ -361,6 +371,7 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
