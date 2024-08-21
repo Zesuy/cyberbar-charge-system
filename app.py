@@ -100,9 +100,20 @@ def admin_dashboard():
 
 @app.route('/dashboard')
 def dashboard():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    last_login = user.last_login
+
+    user_data = {
+        'username': user.username,
+        'last_login': last_login.strftime('%Y-%m-%d %H:%M:%S'),
+        "fee_per_minute": user.fee_per_minute,
+        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'fee': User.calculate_fee(User.query.get(user_id))
+    }
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', user_data=user_data)
 
 
 # 管理员修改密码
