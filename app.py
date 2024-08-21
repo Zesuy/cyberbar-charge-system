@@ -47,7 +47,9 @@ def login():
             else:
                 return redirect(url_for('dashboard'))
         else:
-            return 'Invalid username or password'
+            # 使用更具体的错误提示信息
+            error_message = "用户名或密码错误。"
+            return render_template('index.html', error=error_message)
     return render_template('index.html')
 
 
