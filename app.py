@@ -17,8 +17,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_logged = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime, default=datetime.now().date())
-    billing_group_name = db.Column(db.String(80), default='默认', nullable=False)  # 默认计费组
-    billing_group_price = db.Column(db.Float, default=0.1)  # 每分钟费用，默认0.1元
+    billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -48,6 +47,17 @@ class BillingRecord(db.Model):
         return '<BillingRecord %r>' % self.username
 
 
+class BillingGroup(db.Model):
+    __tablename__ = 'billing_group'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    users = db.relationship('User', backref='billing_group', lazy=True)
+
+    def __repr__(self):
+        return f'<BillingGroup {self.name}>'
+
+
 def create_billing_record(user_id, last_login, logout_time):
     """创建收费记录"""
     user = User.query.get(user_id)
@@ -70,6 +80,14 @@ def create_billing_record(user_id, last_login, logout_time):
 # 创建默认管理员账户
 with app.app_context():
     db.create_all()
+    # 检查是否存在名为 '默认' 的计费组
+    default_billing_group = BillingGroup.query.filter_by(name='默认').first()
+    if not default_billing_group:
+        # 创建默认计费组
+        default_billing_group = BillingGroup(name='默认', price=0.1)
+        db.session.add(default_billing_group)
+        db.session.commit()
+
     # 检查是否存在名为 'admin' 的用户
     if not User.query.filter_by(username='admin').first():
         # 创建管理员用户
@@ -77,8 +95,9 @@ with app.app_context():
             username='admin',
             password=generate_password_hash('admin'),
             is_admin=True,
-            billing_group_name='默认',  # 将管理员用户的计费组名称设置为默认
-            billing_group_price=0.1  # 将管理员用户的计费组价格设置为默认
+            is_logged=False,
+            last_login=datetime.now().date(),
+            billing_group_id=default_billing_group.id  # 设置管理员用户的计费组
         )
         db.session.add(admin_user)
         db.session.commit()
@@ -135,6 +154,7 @@ def index():
             return redirect(url_for('dashboard'))
     else:
         return render_template('index.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -193,7 +213,7 @@ def dashboard():
     }
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html', user_data=user_data,on_log=user.is_logged)
+    return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged)
 
 
 @app.route('/billing_history')
