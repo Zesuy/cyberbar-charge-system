@@ -19,6 +19,7 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, default=datetime.now())
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
     balance = db.Column(db.Float, nullable=False, default=0)
+    balance_left = db.Column(db.Float, nullable=False, default=0)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -158,7 +159,7 @@ def logout():
 
                 # 清除上机时间
                 user.is_logged = False  # 更新用户状态为未上机
-
+                user.balance_left = get_balance_left(user_id)
                 db.session.commit()
                 return '下机成功'
             else:
@@ -325,7 +326,6 @@ def edit_user(user_id):
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
     return render_template('edit_user.html', user=user, billing_groups=billing_groups)
-
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
