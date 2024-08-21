@@ -16,7 +16,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_logged = db.Column(db.Boolean, default=False)
-    last_login = db.Column(db.String(80), default=False)
+    last_login = db.Column(db.DateTime, default=datetime.now())
     billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)  # 关联 BillingGroup 模型
     balance = db.Column(db.Float, nullable=False, default=0)
 
@@ -48,10 +48,18 @@ class BillingRecord(db.Model):
     logout_time = db.Column(db.DateTime)  # 下机时间
     fee = db.Column(db.Float, nullable=False)
     description = db.Column(db.String, nullable=False)
+    billing_group_id = db.Column(db.Integer, db.ForeignKey('billing_group.id'), nullable=False)
+    billing_group = db.relationship('BillingGroup', backref=db.backref('billing_records', lazy=True))
     user = db.relationship('User', backref=db.backref('billing_records', lazy=True))
 
-    def __repr__(self):
-        return '<BillingRecord %r>' % self.username
+    def calculate_fee(self):
+        """计算费用"""
+        if self.last_login:
+            time_diff = datetime.now() - self.last_login
+            hours = time_diff.total_seconds() / 3600  # 计算小时数
+            return round(hours * self.billing_group.price, 2)  # 修改为每小时计费
+        else:
+            return 0.00
 
 
 class BillingGroup(db.Model):
@@ -65,21 +73,27 @@ class BillingGroup(db.Model):
         return f'<BillingGroup {self.name}>'
 
 
-def create_billing_record(user_id, last_login, logout_time):
+def create_billing_record(user_id: object, last_login: object, logout_time: object, billing_group_id: object) -> object:
     """创建收费记录"""
     user = User.query.get(user_id)
     if user:
-        fee = user.calculate_fee()
-        billing_record = BillingRecord(
-            user_id=user_id,
-            username=user.username,  # 从 User 对象获取用户名
-            last_login=last_login,
-            logout_time=logout_time,
-            fee=fee
-        )
-        db.session.add(billing_record)
-        db.session.commit()
-        return billing_record
+        billing_group = BillingGroup.query.get(billing_group_id)  # 获取 BillingGroup 对象
+        if billing_group:
+            billing_record = BillingRecord(
+                user_id=user_id,
+                username=user.username,  # 从 User 对象获取用户名
+                last_login=last_login,
+                logout_time=logout_time,
+                billing_group_id=billing_group_id,  # 添加计费组 ID
+                billing_group=billing_group,  # 将 BillingGroup 对象关联到 BillingRecord
+                description="用户下机"
+            )
+            billing_record.fee = billing_record.calculate_fee()  # 在创建后计算费用
+            db.session.add(billing_record)
+            db.session.commit()
+            return billing_record
+        else:
+            return None  # 计费组不存在
     else:
         return None
 
@@ -140,10 +154,9 @@ def logout():
             if user.is_logged:
                 # 记录下机时间
                 logout_time = datetime.now()
-                create_billing_record(user_id, user.last_login, logout_time)  # 创建计费记录
+                create_billing_record(user_id, user.last_login, logout_time, user.billing_group_id)  # 创建计费记录
 
                 # 清除上机时间
-                user.last_login = None
                 user.is_logged = False  # 更新用户状态为未上机
 
                 db.session.commit()
@@ -156,7 +169,7 @@ def logout():
         return '请先登录'
 
 
-@app.route('/',endpoint='index')
+@app.route('/', endpoint='index')
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['is_admin']:
@@ -204,11 +217,10 @@ def dashboard():
     if user is None:
         return redirect(url_for('logout'))  # 返回错误页面
 
-    # 检查 last_login 是否为 None
-    if user.last_login is None:
-        last_login_str = "未上机"
-    else:
+    if user.is_logged:
         last_login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        last_login_str = "未上机"
 
     user_data = {
         'username': user.username,
