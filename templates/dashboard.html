@@ -6,14 +6,43 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <style>
+        <div class="bg">
+          <img src="../static/desktop1.jpg" alt="" class="bg-image" />
+        </div>
+        <style>
+            .bg {
+            position: fixed; /* Keep it fixed to the viewport */
+            top: 0; /* Position it at the top */
+            left: 0; /* Position it at the left */
+            width: 100%; /* Full width of the viewport */
+            height: 100%; /* Full height of the viewport */
+            overflow: hidden; /* Prevent scrollbars if the image is larger */
+            z-index: -1; /* Make sure it stays behind other content */
+          }
+            .bg-image {
+            width: 100%; /* Image fills the container width */
+            height: 100%; /* Image fills the container height */
+            object-fit: cover; /* Maintain aspect ratio and cover the entire area */
+            filter: blur(5px); /* Blur effect */
+          }
+            .bg-image::after {
+            content: "";
+            display: block;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            position: absolute; /* Position it within the image container */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* Make sure it's on top of the blurred image */
+          }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
         }
 
         .container {
-            background-color: #fff;
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
