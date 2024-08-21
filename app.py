@@ -176,6 +176,19 @@ def dashboard():
     return render_template('dashboard.html', user_data=user_data)
 
 
+@app.route('/billing_history')
+def billing_history():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            billing_records = BillingRecord.query.filter_by(user_id=user_id).all()
+            return render_template('billing_history.html', billing_records=billing_records)
+        else:
+            return '用户不存在'
+    else:
+        return '请先登录'
+
 
 # 管理员修改密码
 @app.route('/admin_change_password', methods=['GET', 'POST'])
