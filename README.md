@@ -6,6 +6,6 @@
 ![图片](images/admin1.png)
 ![控制面板](images/screen1.png)
 # Cquer的第一个“项目”
-### hello world
+### 勉强能用
 # 部署：
 ### 安装所需的库，运行app.py即可
