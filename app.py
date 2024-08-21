@@ -319,9 +319,13 @@ def edit_user(user_id):
         user.billing_group_id = int(request.form['billing_group_id'])  # 更新计费组
         if request.form['password']:
             user.password = generate_password_hash(request.form['password'])
+        # 添加修改余额的代码
+        if 'balance' in request.form:
+            user.balance = float(request.form['balance'])
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
     return render_template('edit_user.html', user=user, billing_groups=billing_groups)
+
 
 
 @app.route('/add_user', methods=['GET', 'POST'])

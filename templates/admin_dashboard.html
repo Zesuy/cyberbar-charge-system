@@ -20,6 +20,8 @@
                         <tr>
                             <th>ID</th>
                             <th>用户名</th>
+                            <th>计费组</th>
+                            <th>余额</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -28,6 +30,8 @@
                         <tr>
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
+                            <td>{{ user.billing_group.name }}</td>
+                            <td>{{ balance }}</td>
                             <td>
                                 <a href="/edit_user/{{ user.id }}" class="btn btn-sm btn-primary">编辑</a>
                                 <a href="/delete_user/{{ user.id }}" class="btn btn-sm btn-danger">删除</a>
