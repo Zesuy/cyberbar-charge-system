@@ -40,17 +40,20 @@ with app.app_context():
         db.session.commit()
 
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'], endpoint='api_login')
 def login():
-    username = request.form['username']
-    user = User.query.filter_by(username=username).first()
-    if user and user.last_login is not None:
-        # 记录上机时间
-        user.last_login = datetime.now()
-        db.session.commit()
-        return '上机成功'
+    user_id = session.get('user_id')  # 获取用户 ID
+    if user_id:
+        user = User.query.get(user_id)  # 使用用户 ID 查询用户
+        if user:
+            # 记录上机时间
+            user.last_login = datetime.now()
+            db.session.commit()
+            return '上机成功'
+        else:
+            return '用户不存在'
     else:
-        return '用户不存在或未登录'
+        return '请先登录'
 
 
 @app.route('/')

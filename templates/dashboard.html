@@ -11,7 +11,24 @@
                 <h2 class="mb-4">用户控制面板</h2>
                 <p>欢迎，{{ session.get('username', '用户') }}！</p>
 
-                <!--  可以添加用户信息和计费信息 -->
+                                <button id="login-button">上机</button>
+
+                <script>
+                    const loginButton = document.getElementById('login-button');
+                    loginButton.addEventListener('click', () => {
+                        fetch('/api/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `username=your_username`, // 替换成实际用户名
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            alert(data); // 显示上机结果
+                        });
+                    });
+                </script>
 
                 <a href="/logout" class="btn btn-danger">退出</a>
             </div>
