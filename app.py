@@ -204,6 +204,10 @@ def login():
 
 @app.route('/logout')
 def logout():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    if user.is_logged:
+        return redirect(url_for('dashboard', logout_message='请先下机'))
     session.pop('logged_in', None)
     session.pop('user_id', None)
     session.pop('is_admin', None)
@@ -230,11 +234,11 @@ def dashboard():
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'fee': user.calculate_fee()  # 使用 user.calculate_fee() 获取费用
     }
-
+    balance_left = round(get_balance_left(user_id) - user.calculate_fee(), 2)
     if not session.get('logged_in'):
         return redirect(url_for('index'))
     return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged, group=user.billing_group.name,
-                           balance=user.billing_group.price, balance_left=get_balance_left(user_id),
+                           balance=user.billing_group.price, balance_left=balance_left,
                            billing_records=user.billing_records)
 
 

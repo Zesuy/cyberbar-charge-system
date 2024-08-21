@@ -50,21 +50,40 @@
             text-decoration: none;
             color: #007bff;
         }
+
+        .alert-info {
+            background-color: #d9edf7;
+            border-color: #bce8f1;
+            color: #31708f;
+        }
+
+        .alert-info h4 {
+            margin-bottom: 0;
+        }
+
+        .alert-info p {
+            margin-top: 5px;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-12">
-                <h2 class="mb-4">用户控制面板</h2>
+                <h2 class="mb-4">控制面板</h2>
                 <p>欢迎，{{ user_data.username }}！</p>
                 {% if error %}
                     <div class="alert alert-danger" role="alert">
                         {{ error }}
                     </div>
                 {% endif %}
-                <div id="notice" class="alert alert-info" role="alert" style="display:none;">
-                    </div>
+                {% if on_log %}
+                <div id="notice" class="alert alert-info" role="alert">
+                    <h4>正在计费</h4>
+                    <p>请勿关闭浏览器窗口，否则将无法正常计费。</p>
+                </div>
+                {% endif %}
                 <div id="user-data">
                     <p>当前时间：{{ user_data.time }}</p>
                     {% if on_log %}
@@ -153,7 +172,10 @@
                     {% endif %}
                 </div>
 
-                <a href="/logout" class="btn btn-danger">退出登录</a>
+                <div id="logout-message" class="alert alert-warning" role="alert">
+                    <h4>请先下机再退出，否则将持续计费！</h4>
+                    <a href="/logout" class="btn btn-danger">退出登录</a>
+                    </div>
             </div>
         </div>
     </div>
