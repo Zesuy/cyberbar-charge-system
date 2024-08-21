@@ -5,6 +5,7 @@
 ![控制面板](images/screen2.png)
 ![图片](images/admin1.png)
 ![控制面板](images/screen1.png)
+![控制面板](images/login.png)
 # Cquer的第一个“项目”
 ### 勉强能用
 # 部署：
