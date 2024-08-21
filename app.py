@@ -15,8 +15,10 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    last_login = db.Column(db.DateTime, default=False)
-    fee_per_minute = db.Column(db.Float, default=0.1)  # 每分钟费用，默认0.1元
+    is_logged = db.Column(db.Boolean, default=False)
+    last_login = db.Column(db.DateTime, default=datetime.now().date())
+    billing_group_name = db.Column(db.String(80), default='默认', nullable=False)  # 默认计费组
+    billing_group_price = db.Column(db.Float, default=0.1)  # 每分钟费用，默认0.1元
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -26,7 +28,7 @@ class User(db.Model):
         if self.last_login:
             time_diff = datetime.now() - self.last_login
             minutes = time_diff.total_seconds() / 60
-            return round(minutes * self.fee_per_minute, 2)
+            return round(minutes * self.billing_group_price, 2)
         else:
             return 0.00
 
@@ -68,8 +70,16 @@ def create_billing_record(user_id, last_login, logout_time):
 # 创建默认管理员账户
 with app.app_context():
     db.create_all()
+    # 检查是否存在名为 'admin' 的用户
     if not User.query.filter_by(username='admin').first():
-        admin_user = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
+        # 创建管理员用户
+        admin_user = User(
+            username='admin',
+            password=generate_password_hash('admin'),
+            is_admin=True,
+            billing_group_name='默认',  # 将管理员用户的计费组名称设置为默认
+            billing_group_price=0.1  # 将管理员用户的计费组价格设置为默认
+        )
         db.session.add(admin_user)
         db.session.commit()
 
@@ -96,15 +106,20 @@ def logout():
     if user_id:
         user = User.query.get(user_id)
         if user:
-            # 记录下机时间
-            logout_time = datetime.now()
-            create_billing_record(user_id, user.last_login, logout_time)  # 创建计费记录
+            # 检查用户是否已上机
+            if user.is_logged:
+                # 记录下机时间
+                logout_time = datetime.now()
+                create_billing_record(user_id, user.last_login, logout_time)  # 创建计费记录
 
-            # 清除上机时间
-            user.last_login = None
+                # 清除上机时间
+                user.last_login = None
+                user.is_logged = False  # 更新用户状态为未上机
 
-            db.session.commit()
-            return '下机成功'
+                db.session.commit()
+                return '下机成功'
+            else:
+                return '您尚未上机'
         else:
             return '用户不存在'
     else:
@@ -164,7 +179,7 @@ def dashboard():
     user = User.query.get(user_id)
 
     # 检查 last_login 是否为 None
-    if user.last_login is None:
+    if user.is_logged:
         last_login_str = "未上机"
     else:
         last_login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S')
@@ -172,13 +187,13 @@ def dashboard():
     user_data = {
         'username': user.username,
         'last_login': last_login_str,
-        "fee_per_minute": user.fee_per_minute,
+        "fee_per_minute": user.billing_group_price,
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'fee': User.calculate_fee(User.query.get(user_id))
     }
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return render_template('dashboard.html', user_data=user_data,on_log=user.last_login)
+    return render_template('dashboard.html', user_data=user_data,on_log=user.is_logged)
 
 
 @app.route('/billing_history')
