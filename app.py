@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # 请替换成更安全的密钥
@@ -9,22 +10,47 @@ db = SQLAlchemy(app)
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    last_login = db.Column(db.DateTime)
+    fee_per_minute = db.Column(db.Float, default=0.1)  # 每分钟费用，默认0.1元
 
     def __repr__(self):
         return '<User %r>' % self.username
 
+    def calculate_fee(self):
+        """计算费用"""
+        if self.last_login:
+            time_diff = datetime.now() - self.last_login
+            minutes = time_diff.total_seconds() / 60
+            return round(minutes * self.fee_per_minute, 2)
+        else:
+            return 0.00
+
 
 # 创建默认管理员账户
 with app.app_context():
+    db.create_all()
     if not User.query.filter_by(username='admin').first():
         admin_user = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
         db.session.add(admin_user)
         db.session.commit()
-    db.create_all()
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    user = User.query.filter_by(username=username).first()
+    if user and user.last_login is not None:
+        # 记录上机时间
+        user.last_login = datetime.now()
+        db.session.commit()
+        return '上机成功'
+    else:
+        return '用户不存在或未登录'
 
 
 @app.route('/')
@@ -108,9 +134,11 @@ def edit_user(user_id):
         return redirect(url_for('admin_dashboard'))
     return render_template('edit_user.html', user=user)
 
+
 @app.route('/add_user')
 def add_user_form():
     return render_template('add_user.html')
+
 
 @app.route('/add_user', methods=['POST'])
 def add_user():

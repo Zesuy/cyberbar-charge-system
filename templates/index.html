@@ -35,6 +35,24 @@
                 <p class="text-center"><a href="#">管理员登录</a></p>
                 {% else %}
                 <p class="text-center">您已登录。 <a href="/logout">退出</a></p>
+                <button id="login-button">上机</button>
+
+                <script>
+                    const loginButton = document.getElementById('login-button');
+                    loginButton.addEventListener('click', () => {
+                        fetch('/api/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `username=your_username`, // 替换成实际用户名
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            alert(data); // 显示上机结果
+                        });
+                    });
+                </script>
                 {% endif %}
             </div>
         </div>
