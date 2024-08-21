@@ -288,11 +288,6 @@ def edit_user(user_id):
     return render_template('edit_user.html', user=user, billing_groups=billing_groups)
 
 
-@app.route('/add_user')
-def add_user_form():
-    return render_template('add_user.html')
-
-
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
     if not session.get('logged_in') or not session.get('is_admin'):
