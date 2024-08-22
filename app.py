@@ -37,7 +37,8 @@ class User(db.Model):
 
 def get_balance_left(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
-    balance_left = user.balance - sum(record.fee for record in user.billing_records)
+    sum_result = sum(record.fee for record in user.billing_records if record.fee < 0)
+    balance_left = user.balance + sum_result
     return balance_left
 
 
@@ -75,7 +76,8 @@ class BillingGroup(db.Model):
         return f'<BillingGroup {self.name}>'
 
 
-def create_billing_record(user_id: object, last_login: object, logout_time: object, billing_group_id: object, description="用户下机", fee=None):
+def create_billing_record(user_id: object, last_login: object, logout_time: object, billing_group_id: object,
+                          description="用户下机", fee=None):
     """创建收费记录"""
     user = User.query.get(user_id)
     if user:
@@ -89,10 +91,10 @@ def create_billing_record(user_id: object, last_login: object, logout_time: obje
                 billing_group_id=billing_group_id,  # 添加计费组 ID
                 billing_group=billing_group,  # 将 BillingGroup 对象关联到 BillingRecord
                 description=description,  # 使用传入的 description 或者默认值
-                fee=fee  # 使用传入的 fee 或者默认值
+                fee=None if fee is None else -fee  # 使用传入的 fee 或者默认值
             )
             if fee is None:  # 如果没有传入 fee，则计算费用
-                billing_record.fee = billing_record.calculate_fee()
+                billing_record.fee = -billing_record.calculate_fee()
             db.session.add(billing_record)
             db.session.commit()
             return billing_record
@@ -254,7 +256,8 @@ def process_recharge():
     # 2. 更新用户余额
     user.balance = amount + user.balance
     # 3. 记录充值记录
-    create_billing_record(user_id, datetime.now(), datetime.now(), user.billing_group_id,description='用户充值',fee=-amount)
+    create_billing_record(user_id, datetime.now(), datetime.now(), user.billing_group_id, description='用户充值',
+                          fee=-amount)
     return render_template('success.html')
 
 
