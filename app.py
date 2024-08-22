@@ -341,7 +341,6 @@ def verify_id_card():
 def validate_id_card(id_card):
     # 使用数据库查询或其他验证方法判断身份证号是否存在且有效
     # 返回 True 表示验证成功，返回 False 表示验证失败
-    # 为了信息安全，暂时不校验身份证
     return True
 
 
@@ -356,6 +355,9 @@ def logout():
     session.pop('is_admin', None)
     return redirect(url_for('index'))
 
+@app.errorhandler(404)
+def page_not_found(error):
+    return redirect(url_for('index'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -364,6 +366,8 @@ def dashboard():
     # 检查 user_id 是否为空
     if user is None:
         return redirect(url_for('logout'))  # 返回错误页面
+    if not user.is_verified:
+        return redirect(url_for('verification'))
 
     if user.is_logged:
         last_login_str = user.last_login.strftime('%Y-%m-%d %H:%M:%S')
