@@ -502,9 +502,12 @@ def delete_user(user_id):
     if not session.get('logged_in') or not session.get('is_admin'):
         return redirect(url_for('index'))
     user = User.query.get_or_404(user_id)
+    for record in user.billing_records:
+        db.session.delete(record)
     db.session.delete(user)
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
 
 
 if __name__ == '__main__':
