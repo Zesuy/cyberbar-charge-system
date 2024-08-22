@@ -148,7 +148,7 @@
                 <button id="logout-button">
                     <i class="fas fa-sign-out-alt"></i> 下机
                 </button>
-                <button id="balance" onclick="showAdminMessage()">
+                <button id="balance" onclick="window.location.href='/api/recharge'">
                     <i class="fas fa-money-bill-wave"></i> 充值
                 </button>
 
@@ -181,9 +181,6 @@
                         .catch(error => console.error(error));
                     }
 
-                    function showAdminMessage() {
-                        alert("请联系管理员");
-                    }
 
                     // 上机按钮逻辑
                     const loginButton = document.getElementById('login-button');

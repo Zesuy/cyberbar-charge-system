@@ -75,7 +75,7 @@ class BillingGroup(db.Model):
         return f'<BillingGroup {self.name}>'
 
 
-def create_billing_record(user_id: object, last_login: object, logout_time: object, billing_group_id: object) -> object:
+def create_billing_record(user_id: object, last_login: object, logout_time: object, billing_group_id: object, description="用户下机", fee=None):
     """创建收费记录"""
     user = User.query.get(user_id)
     if user:
@@ -88,9 +88,11 @@ def create_billing_record(user_id: object, last_login: object, logout_time: obje
                 logout_time=logout_time,
                 billing_group_id=billing_group_id,  # 添加计费组 ID
                 billing_group=billing_group,  # 将 BillingGroup 对象关联到 BillingRecord
-                description="用户下机"
+                description=description,  # 使用传入的 description 或者默认值
+                fee=fee  # 使用传入的 fee 或者默认值
             )
-            billing_record.fee = billing_record.calculate_fee()  # 在创建后计算费用
+            if fee is None:  # 如果没有传入 fee，则计算费用
+                billing_record.fee = billing_record.calculate_fee()
             db.session.add(billing_record)
             db.session.commit()
             return billing_record
@@ -130,7 +132,7 @@ with app.app_context():
 def cancel_call():
     if not session.get('logged_in'):
         return jsonify({'error': '未登录'}), 403
-    user_id=session.get('user_id')
+    user_id = session.get('user_id')
     user = User.query.get(user_id)
     if user:
         user.on_call = False  # 取消用户的呼叫状态
@@ -210,6 +212,50 @@ def logout():
             return '用户不存在'
     else:
         return '请先登录'
+
+
+@app.route('/api/recharge', methods=['GET', 'POST'])
+def recharge():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user is None:
+            return redirect(url_for('dashboard'))
+        else:
+            if request.method == 'GET':
+                return render_template('recharge.html', user=user)
+            elif request.method == 'POST':
+                # 处理充值逻辑
+                amount = int(request.form.get('amount'))
+                # ... 其他充值逻辑 ...
+                return render_template('success.html')
+    else:
+        return redirect(url_for('login'))
+
+
+@app.route('/api/recharge/confirm/<int:amount>')
+def confirm_recharge(amount):
+    return render_template('confirm.html', amount=amount)
+
+
+@app.route('/api/recharge/confirm/custom', methods=['POST'])
+def confirm_custom_recharge():
+    amount = int(request.form.get('amount'))
+    return render_template('confirm.html', amount=amount)
+
+
+@app.route('/api/recharge/process', methods=['POST'])
+def process_recharge():
+    amount = int(request.form.get('amount'))
+    # 这里需要处理真正的充值逻辑，例如：
+    # 1. 获取用户 ID
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    # 2. 更新用户余额
+    user.balance = amount + user.balance
+    # 3. 记录充值记录
+    create_billing_record(user_id, datetime.now(), datetime.now(), user.billing_group_id,description='用户充值',fee=-amount)
+    return render_template('success.html')
 
 
 @app.route('/', endpoint='index')

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充值</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .btn-lg {
+            width: 120px;
+            height: 120px;
+        }
+        article {
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+            border-radius: 10px; /* 添加圆角 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">充值</h2>
+        <article class="col-md-6 offset-md-3">
+            <header class="card-header">
+                <h5 class="card-title text-center">用户: {{ user.username }}</h5>
+            </header>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-6 mb-2">
+                        <a href="/api/recharge/confirm/10" class="btn btn-light btn-lg btn-block">充值10元</a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/api/recharge/confirm/50" class="btn btn-light btn-lg btn-block">充值50元</a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/api/recharge/confirm/100" class="btn btn-light btn-lg btn-block">充值100元</a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <form action="/api/recharge/confirm/custom" method="POST">
+                            <input type="hidden" name="amount" value="">
+                            <button type="submit" class="btn btn-light btn-lg btn-block">自定义充值</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
