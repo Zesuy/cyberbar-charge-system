@@ -24,6 +24,7 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False, default=0)
     card = db.relationship('Card', backref='users')
+    remark = db.Column(db.String(120), default='')
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -152,6 +153,7 @@ def cancel_call():
     user = User.query.get(user_id)
     if user:
         user.on_call = False  # 取消用户的呼叫状态
+        user.remark = ''
         db.session.commit()
         return jsonify({'success': '取消呼叫成功'})
     return jsonify({'error': '用户不存在'}), 404
@@ -180,6 +182,8 @@ def call_admin():
     user = User.query.get(user_id)
     if user:
         user.on_call = True
+        remark = request.form.get('remark')
+        user.remark = remark
         db.session.commit()
         return jsonify({'success': '呼叫管理员成功'})
     return jsonify({'error': '用户不存在'}), 404
@@ -348,16 +352,24 @@ def validate_id_card(id_card):
 def logout():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
-    if user.is_logged:
-        return redirect(url_for('dashboard'))
-    session.pop('logged_in', None)
-    session.pop('user_id', None)
-    session.pop('is_admin', None)
-    return redirect(url_for('index'))
+    if user:
+        if user.is_logged:
+            return redirect(url_for('dashboard'))
+        session.pop('logged_in', None)
+        session.pop('user_id', None)
+        session.pop('is_admin', None)
+        return redirect(url_for('index'))
+    else:
+        session.pop('logged_in', None)
+        session.pop('user_id', None)
+        session.pop('is_admin', None)
+        return redirect(url_for('login'))
+
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template('error.html',message=404)
+    return render_template('error.html', message=404)
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -380,11 +392,12 @@ def dashboard():
         "fee_per_minute": user.billing_group.price,  # 使用 user.billing_group.price 获取价格
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'fee': user.calculate_fee(),  # 使用 user.calculate_fee() 获取费用
-        'oncall': user.on_call
+        'oncall': user.on_call,
+        'remark': user.remark
     }
     if user.is_logged:
         balance_left = round(get_balance_left(user_id) - user.calculate_fee(), 2)
-    else :
+    else:
         balance_left = round(user.balance_left, 2)
     if not session.get('logged_in'):
         return redirect(url_for('index'))

@@ -111,6 +111,7 @@
     {% if user_data.oncall %}
     <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
         <span> 正在呼叫管理员！</span>
+        <span> 备注：{{ user_data.remark }}</span>
         <button id="cancel-call-button" onclick="cancelCall()" class="btn btn-light">取消呼叫</button>
     </div>
     {% endif %}
@@ -164,19 +165,24 @@
 
             <script>
                 function callAdmin() {
-                    fetch('/api/call_admin', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.success || data.error);
-                            location.reload(); // 显示呼叫结果
+                    let remark = prompt("请输入备注信息：");
+                    if (remark !== null) {
+                        fetch('/api/call_admin', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `remark=${encodeURIComponent(remark)}`
                         })
-                        .catch(error => console.error(error));
+                            .then(response => response.json())
+                            .then(data => {
+                                alert(data.success || data.error);
+                                location.reload(); // 显示呼叫结果
+                            })
+                            .catch(error => console.error(error));
+                    }
                 }
+
 
                 function cancelCall() {
                     fetch('/api/cancel_call', {
