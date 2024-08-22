@@ -357,7 +357,7 @@ def logout():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return redirect(url_for('index'))
+    return render_template('error.html',message=404)
 
 @app.route('/dashboard')
 def dashboard():
@@ -382,7 +382,10 @@ def dashboard():
         'fee': user.calculate_fee(),  # 使用 user.calculate_fee() 获取费用
         'oncall': user.on_call
     }
-    balance_left = round(get_balance_left(user_id) - user.calculate_fee(), 2)
+    if user.is_logged:
+        balance_left = round(get_balance_left(user_id) - user.calculate_fee(), 2)
+    else :
+        balance_left = round(user.balance_left, 2)
     if not session.get('logged_in'):
         return redirect(url_for('index'))
     return render_template('dashboard.html', user_data=user_data, on_log=user.is_logged, group=user.billing_group.name,
