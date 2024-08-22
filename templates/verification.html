@@ -3,7 +3,39 @@
 <head>
     <title>网吧计费系统 - 实名认证</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <div class="bg">
+        <img src="../static/desktop1.jpg" alt="" class="bg-image"/>
+    </div>
     <style>
+        .bg {
+            position: fixed; /* Keep it fixed to the viewport */
+            top: 0; /* Position it at the top */
+            left: 0; /* Position it at the left */
+            width: 100%; /* Full width of the viewport */
+            height: 100%; /* Full height of the viewport */
+            overflow: hidden; /* Prevent scrollbars if the image is larger */
+            z-index: -1; /* Make sure it stays behind other content */
+        }
+
+        .bg-image {
+            width: 100%; /* Image fills the container width */
+            height: 100%; /* Image fills the container height */
+            object-fit: cover; /* Maintain aspect ratio and cover the entire area */
+            filter: blur(5px); /* Blur effect */
+        }
+
+        .bg-image::after {
+            content: "";
+            display: block;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            position: absolute; /* Position it within the image container */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* Make sure it's on top of the blurred image */
+        }
+
         body {
             background-color: #f4f4f4;
         }
@@ -46,6 +78,15 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <h2 class="text-center mb-4">实名认证</h2>
+            <div class="alert alert-danger" role="alert">
+                <ul>
+                    <li>根据《互联网上网服务营业场所管理条例》<li>
+                    <li>第二十一条，互联网上网服务营业场所经营单位不得接纳未成年人进入营业场所。</li>
+                    <li>互联网上网服务营业场所经营单位应当在营业场所入口处的显著位置悬挂未成年人禁入标志。</li>
+                    <li>互联网上网服务营业场所每日营业时间限于8时至24时。</li>
+                    <li>互联网上网服务营业场所经营单位应当对上网消费者的身份证等有效证件进行核对、登记，并记录有关上网信息。登记内容和记录备份保存时间不得少于60日，并在文化行政部门、公安机关依法查询时予以提供。登记内容和记录备份在保存期内不得修改或者删除。</li>
+                </ul>
+            </div>
             <form id="id_card_form" method="post">
                 <div class="form-group">
                     <label for="id_card">请输入您的身份证号：</label>
@@ -62,8 +103,8 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $("#id_card_form").submit(function(event) {
+    $(document).ready(function () {
+        $("#id_card_form").submit(function (event) {
             event.preventDefault();
             var idCard = $("#id_card").val();
             if (validateIdCard(idCard)) {
@@ -73,11 +114,11 @@
                     data: {
                         id_card: idCard
                     },
-                    success: function(response) {
+                    success: function (response) {
                         alert("验证成功！");
                         window.location.href = "/"; // 跳转到首页
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         alert("验证失败，请检查身份证号！");
                     }
                 });
