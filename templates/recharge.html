@@ -3,51 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>充值</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <div class="bg">
+        <img src="../static/desktop1.jpg" alt="" class="bg-image"/>
+    </div>
     <style>
+        .bg {
+            position: fixed; /* Keep it fixed to the viewport */
+            top: 0; /* Position it at the top */
+            left: 0; /* Position it at the left */
+            width: 100%; /* Full width of the viewport */
+            height: 100%; /* Full height of the viewport */
+            overflow: hidden; /* Prevent scrollbars if the image is larger */
+            z-index: -1; /* Make sure it stays behind other content */
+        }
+
+        .bg-image {
+            width: 100%; /* Image fills the container width */
+            height: 100%; /* Image fills the container height */
+            object-fit: cover; /* Maintain aspect ratio and cover the entire area */
+            filter: blur(5px); /* Blur effect */
+        }
+
+        .bg-image::after {
+            content: "";
+            display: block;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            position: absolute; /* Position it within the image container */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* Make sure it's on top of the blurred image */
+        }
+
         .btn-lg {
             width: 120px;
             height: 120px;
         }
+
         article {
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
             border-radius: 10px; /* 添加圆角 */
+            background-color: rgba(255, 255, 255, 0.9); /* 设置半透明背景 */
+        }
+
+
+        #game-tips h4 {
+            color: #343a40; /* 深灰色标题颜色 */
+            margin-bottom: 10px; /* 标题下边距 */
+        }
+
+        #game-tips p {
+            color: #6c757d; /* 灰色文字颜色 */
+            margin-bottom: 5px; /* 文字下边距 */
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">充值</h2>
-        <article class="col-md-6 offset-md-3">
-            <header class="card-header">
-                <h5 class="card-title text-center">用户: {{ user.username }}</h5>
-            </header>
-            <div class="card-body">
-                <div class="row justify-content-center">
-                    <div class="col-6 mb-2">
-                        <a href="/api/recharge/confirm/10" class="btn btn-light btn-lg btn-block">充值10元</a>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <a href="/api/recharge/confirm/50" class="btn btn-light btn-lg btn-block">充值50元</a>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <a href="/api/recharge/confirm/100" class="btn btn-light btn-lg btn-block">充值100元</a>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <form action="/api/recharge/confirm/custom" method="POST">
-                            <input type="number" name="amount" value="">
-                            <button type="submit" class="btn btn-light btn-lg btn-block">自定义充值</button>
-                        </form>
-                    </div>
+<div class="container mt-5">
+    <article class="col-md-6 offset-md-3">
+        <header class="card-header">
+            <h5 class="card-title text-center">充值页面</h5>
+            <h5 class="card-title text-center">用户: {{ user.username }}</h5>
+        </header>
+        <div class="card-body">
+            <div class="row justify-content-center">
+                <div class="col-6 mb-2">
+                    <a href="/api/recharge/confirm/10" class="btn btn-light btn-lg btn-block">充值10元</a>
                 </div>
+                <div class="col-6 mb-2">
+                    <a href="/api/recharge/confirm/50" class="btn btn-light btn-lg btn-block">充值50元</a>
+                </div>
+                <div class="col-6 mb-2">
+                    <a href="/api/recharge/confirm/100" class="btn btn-light btn-lg btn-block">充值100元</a>
+                </div>
+                <div class="col-6 mb-2">
+                    <form action="/api/recharge/confirm/custom" method="POST">
+                        <input type="number" name="amount" value="">
+                        <button type="submit" class="btn btn-light btn-lg btn-block">自定义充值</button>
+                    </form>
+                </div>
+                <button id="balance" class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                    <i class="fas fa-money-bill-wave"></i> 返回
+                </button>
             </div>
-        </article>
-    </div>
+        </div>
+    </article>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 </html>

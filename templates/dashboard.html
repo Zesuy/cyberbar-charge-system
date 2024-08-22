@@ -172,7 +172,8 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            alert(data.success || data.error); // 显示呼叫结果
+                            alert(data.success || data.error);
+                            location.reload(); // 显示呼叫结果
                         })
                         .catch(error => console.error(error));
                 }
@@ -186,7 +187,8 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            alert(data.success || data.error); // 显示取消呼叫结果
+                            alert(data.success || data.error);
+                            location.reload(); // 显示取消呼叫结果
                         })
                         .catch(error => console.error(error));
                 }
