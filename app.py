@@ -130,8 +130,8 @@ with app.app_context():
 def cancel_call():
     if not session.get('logged_in'):
         return jsonify({'error': '未登录'}), 403
-
-    user = User.query.filter_by(username=session.get('username')).first()
+    user_id=session.get('user_id')
+    user = User.query.get(user_id)
     if user:
         user.on_call = False  # 取消用户的呼叫状态
         db.session.commit()
