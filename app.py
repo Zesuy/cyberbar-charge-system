@@ -21,6 +21,9 @@ class User(db.Model):
     balance = db.Column(db.Float, nullable=False, default=0)
     balance_left = db.Column(db.Float, nullable=False, default=0)
     on_call = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False, default=0)
+    card = db.relationship('Card', backref='users')
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -33,6 +36,17 @@ class User(db.Model):
             return round(hours * self.billing_group.price, 2)  # 修改为每小时计费
         else:
             return 0.00
+
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_number = db.Column(db.String(18), unique=True, nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    # 可以添加其他字段，例如性别、地址等
+    created_at = db.Column(db.DateTime, default=datetime.now())
+
+    def __repr__(self):
+        return f'<Card {self.id_number}>'
 
 
 def get_balance_left(user_id):
@@ -86,7 +100,7 @@ def create_billing_record(user_id: object, last_login: object, logout_time: obje
             billing_record = BillingRecord(
                 user_id=user_id,
                 username=user.username,  # 从 User 对象获取用户名
-                last_login=last_login,
+                last_login=last_login,  # 用来记录上机的时间。
                 logout_time=logout_time,
                 billing_group_id=billing_group_id,  # 添加计费组 ID
                 billing_group=billing_group,  # 将 BillingGroup 对象关联到 BillingRecord
@@ -284,15 +298,51 @@ def login():
             session['logged_in'] = True
             session['user_id'] = user.id
             session['is_admin'] = user.is_admin
-            if user.is_admin:
-                return redirect(url_for('admin_dashboard'))
+
+            # 检查是否已实名认证
+            if user.is_verified:
+                # 已实名认证，根据角色进行跳转
+                if user.is_admin:
+                    return redirect(url_for('admin_dashboard'))
+                else:
+                    return redirect(url_for('dashboard'))
             else:
-                return redirect(url_for('dashboard'))
+                # 未实名认证，跳转到实名认证页面
+                return redirect(url_for('verification'))
         else:
             # 使用更具体的错误提示信息
             error_message = "用户名或密码错误。"
             return render_template('index.html', error=error_message)
     return render_template('index.html', user_ip=user_ip)  # 将 user_ip 传递给模板
+
+
+# 添加实名认证页面路由
+@app.route('/verification')
+def verification():
+    return render_template('verification.html')
+
+
+@app.route('/verify_id_card', methods=['POST'])
+def verify_id_card():
+    id_card = request.form.get('id_card')
+    # 验证身份证号
+    if validate_id_card(id_card):
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        user.is_verified = True
+        user.card_id = id_card
+        db.session.commit()
+        # ...
+        return jsonify({'success': True, 'message': '验证成功'})
+    else:
+        return jsonify({'success': False, 'message': '身份证号无效'})
+
+
+def validate_id_card(id_card):
+    # 使用数据库查询或其他验证方法判断身份证号是否存在且有效
+    # 返回 True 表示验证成功，返回 False 表示验证失败
+    # 为了信息安全，暂时不校验身份证
+    return True
 
 
 @app.route('/logout')
@@ -507,7 +557,6 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
-
 
 
 if __name__ == '__main__':
